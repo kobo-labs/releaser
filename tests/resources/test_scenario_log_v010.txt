@@ -1,0 +1,6 @@
+* Update CHANGELOG for v0.1.0 (HEAD -> v0, tag: v0.1.0, origin/v0)
+*   Merge `main` into `v0`
+|\  
+| * feat(scope1): add a new feature (origin/main)
+|/  
+* first commit

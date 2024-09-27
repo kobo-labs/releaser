@@ -1,0 +1,64 @@
+[tool.poetry]
+name = "releaser"
+version = "0.1.0"
+description = ""
+authors = []
+readme = "README.md"
+packages = [{include = "releaser", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+commitizen = "^3.28.0"
+gitpython = "^3.1.43"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.5.6"
+pyright = "^1.1.375"
+pytest = "^8.3.2"
+pytest-cov = "^5.0.0"
+freezegun = "^1.5.1"
+jinja2 = "^3.1.4"
+
+[tool.poetry.scripts]
+releaser = "releaser.__main__:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "COM812",  # Trailing comma missing
+    "D203",    # one-blank-line-before-class
+    "D212",    # multi-line-summary-first-line
+    "FBT001",  # boolean-type-hint-positional-argument
+    "ISC001",  # single-line-implicit-string-concatenation
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = [
+    "ANN001",  # missing-type-function-argument
+    "ARG001",  # unused-function-argument
+    "D",       # pydocstyle
+    "ERA001",  # commented-out-code
+    "FBT002",  # boolean-default-value-positional-argument
+    "S101",    # assert
+    "S603",    # subprocess-without-shell-equals-true
+]
+
+[tool.pyright]
+strict = ["**/*.py"]
+pythonVersion = "3.12"
+exclude = [
+    "tests/*",
+    ".direnv/*"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

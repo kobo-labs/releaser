@@ -1,0 +1,191 @@
+---
+on:
+  workflow_call:
+
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+  prepare_test_branches:
+    runs-on: arc-runner-set
+    outputs:
+      no_bump_branch: ${{ steps.create_test_branches.outputs.release-test-no-bump }}
+      major_branch: ${{ steps.create_test_branches.outputs.release-test-major }}
+    steps:
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y git
+
+      # Generate a GitHub App token to authenticate with the repository
+      - uses: actions/create-github-app-token@v1
+        id: app_token
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+      # Checkout the main branch
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ steps.app_token.outputs.token }}
+          fetch-depth: 0
+
+      # Get the first commit SHA in the repository
+      - name: Get first commit SHA
+        id: first_commit
+        run: |
+          FIRST_COMMIT_SHA=$(git rev-list --max-parents=0 HEAD)
+          echo "sha=${FIRST_COMMIT_SHA}" >> ${GITHUB_OUTPUT}
+
+      # Configure git user details
+      - name: Configure Git
+        run: |
+          git config --global user.email "release-workflow[bot]@users.noreply.github.com"
+          git config --global user.name "release-workflow[bot]"
+
+      # Create test branches and make initial commits
+      - name: Create test branches
+        id: create_test_branches
+        run: |
+          BRANCH_PREFIXES=("release-test-no-bump" "release-test-major")
+          COMMIT_MESSAGES=("chore: something" "feat!: something")
+
+          for i in "${!BRANCH_PREFIXES[@]}"; do
+            BRANCH_NAME="${BRANCH_PREFIXES[$i]}-$(date +%s)"
+            COMMIT_MESSAGE="${COMMIT_MESSAGES[$i]}"
+
+            # Checkout new branch on first commit
+            git checkout ${{ steps.first_commit.outputs.sha }}
+            git checkout -b ${BRANCH_NAME}
+
+            # Perform commit
+            echo '{
+              "commitizen": {
+                "name": "cz_conventional_commits",
+                "tag_format": "v$version",
+                "version_scheme": "semver",
+                "version_provider": "scm",
+                "update_changelog_on_bump": true
+              }
+            }' > .cz.json
+            git add .cz.json
+            git commit -m "${COMMIT_MESSAGE}"
+
+            git push origin ${BRANCH_NAME}
+            echo "${BRANCH_PREFIXES[$i]}=${BRANCH_NAME}" >> ${GITHUB_OUTPUT}
+          done
+
+  # Test releasing the branch with no bump
+  test_no_bump_release:
+    uses: ./.github/workflows/release.yml
+    needs: prepare_test_branches
+    secrets: inherit
+    with:
+      source_branch: ${{ needs.prepare_test_branches.outputs.no_bump_branch }}
+      dry_run: true
+
+  # Assert conditions for the no bump release test
+  assert_no_bump_release:
+    runs-on: arc-runner-set
+    needs: test_no_bump_release
+    steps:
+      - name: Assert no bump release conditions
+        run: |
+          if [[ "${{ needs.test_no_bump_release.outputs.ready }}" != "false" ]]; then
+            echo "Error: ready is not false"
+            exit 1
+          fi
+
+          if [[ -n "${{ needs.test_no_bump_release.outputs.tag }}" ]]; then
+            echo "Error: tag is not empty"
+            exit 1
+          fi
+
+          if [[ -n "${{ needs.test_no_bump_release.outputs.changelog }}" ]]; then
+            echo "Error: changelog is not empty"
+            exit 1
+          fi
+
+  # Test releasing the major branch
+  test_major_release:
+    uses: ./.github/workflows/release.yml
+    needs: prepare_test_branches
+    secrets: inherit
+    with:
+      source_branch: ${{ needs.prepare_test_branches.outputs.major_branch }}
+      dry_run: true
+
+  # Assert conditions for the major release test
+  assert_major_release:
+    runs-on: arc-runner-set
+    needs: test_major_release
+    steps:
+      - name: Assert major release conditions
+        run: |
+          if [[ "${{ needs.test_major_release.outputs.ready }}" != "true" ]]; then
+            echo "Error: ready is not true"
+            exit 1
+          fi
+
+          if [[ -z "${{ needs.test_major_release.outputs.tag }}" ]]; then
+            echo "Error: tag is empty"
+            exit 1
+          fi
+
+          if [[ -z "${{ needs.test_major_release.outputs.changelog }}" ]]; then
+            echo "Error: changelog is empty"
+            exit 1
+          fi
+
+  # Cleanup test branches after all tests
+  cleanup_test_branches:
+    runs-on: arc-runner-set
+    needs: [prepare_test_branches, assert_no_bump_release, assert_major_release]
+    if: ${{ always() }}
+    steps:
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y git
+
+      # Generate a GitHub App token to authenticate with the repository
+      - uses: actions/create-github-app-token@v1
+        id: app_token
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+      # Checkout the main branch
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ steps.app_token.outputs.token }}
+          fetch-depth: 0
+
+      # Delete the test branches
+      - name: Cleanup test branches
+        run: |
+          # Identify branches matching the pattern
+          no_bump_branch="${{ needs.prepare_test_branches.outputs.no_bump_branch }}"
+          major_branch="${{ needs.prepare_test_branches.outputs.major_branch }}"
+          branches=("${no_bump_branch}" "${major_branch}")
+
+          # Loop through the branches and delete them
+          for branch in "${branches[@]}"; do
+            git push origin --delete "${branch}"
+          done
+
+  # Test releasing default branch. Usually this should result in `ready=false` since
+  # all main commits should be included in the latest release.
+  test_default_branch_release:
+    uses: ./.github/workflows/release.yml
+    secrets: inherit
+    with:
+      dry_run: true
+
+  # Test releasing the PR branch. This will preview the release that should be created
+  # after merging into main. The result will depend on the commit messages in the PR branch.
+  test_pr_branch_release:
+    uses: ./.github/workflows/release.yml
+    secrets: inherit
+    with:
+      source_branch: ${{ github.head_ref }}
+      dry_run: true

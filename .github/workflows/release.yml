@@ -1,0 +1,85 @@
+---
+name: Release
+on:
+  workflow_call:
+    inputs:
+      source_branch:
+        description: Source branch containing new commits to be merged into release branch.
+        type: string
+        default: main
+      dry_run:
+        description: If set to true, the release won't be executed and no update is pushed to GitHub.
+        type: boolean
+        default: false
+    outputs:
+      ready:
+        value: ${{ jobs.release.outputs.ready }}
+      tag:
+        value: ${{ jobs.release.outputs.tag }}
+      changelog:
+        value: ${{ jobs.release.outputs.changelog }}
+
+jobs:
+  release:
+    if: ${{ github.actor != 'release-workflow[bot]' }}
+    runs-on: arc-runner-set
+    outputs:
+      ready: ${{ fromJSON(steps.release.outputs.outputs)['ready'] }}
+      tag: ${{ fromJSON(steps.release.outputs.outputs)['tag'] }}
+      changelog: ${{ fromJSON(steps.release.outputs.outputs)['changelog'] }}
+    steps:
+      - name: Install Nix dependencies
+        run: sudo apt-get update && sudo apt-get install -y curl git xz-utils
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v27
+
+      - uses: actions/create-github-app-token@v1
+        id: app_token
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+      - name: Get workflow reference
+        id: introspection
+        uses: kobo-labs/introspect@main
+        with:
+          github_token: ${{ steps.app_token.outputs.token }}
+          referenced_workflow: "kobo-labs/releaser/.github/workflows/release.yml"
+
+      # By default, `actions/checkout` uses `github.repository` to determine which repository to check out.
+      # The `github.repository` value is derived from the GitHub context set by the calling workflow.
+      # Therefore, this action will check out the repository containing the workflow that invoked `release.yml`,
+      # which is typically different from the current repository.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_branch }}
+          token: ${{ steps.app_token.outputs.token }}
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config --global user.email "release-workflow[bot]@users.noreply.github.com"
+          git config --global user.name "release-workflow[bot]"
+
+      - name: Release
+        id: release
+        uses: jenseng/dynamic-uses@v1
+        with:
+          uses: kobo-labs/releaser@${{ steps.introspection.outputs.referenced_workflow_sha }}
+          with: |
+            {
+              "cmd": "release -s ${{ inputs.source_branch }} -t 'github_linked_sha.md.j2' ${{ inputs.dry_run && '--dry-run' || '' }} ${{ github.workspace }}",
+            }
+
+      - name: Create GitHub Release
+        if: ${{ fromJSON(steps.release.outputs.outputs)['ready'] == 'true' && !inputs.dry_run }}
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: "${{ fromJSON(steps.release.outputs.outputs)['tag'] }}"
+          release_name: "${{ fromJSON(steps.release.outputs.outputs)['tag'] }}"
+          body_path: "${{ fromJSON(steps.release.outputs.outputs)['changelog'] }}"
+          draft: false
+          prerelease: false

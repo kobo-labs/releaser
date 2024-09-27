@@ -1,0 +1,3 @@
+[run]
+omit =
+    src/releaser/__main__.py

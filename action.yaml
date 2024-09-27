@@ -1,0 +1,27 @@
+---
+name: Release
+description: Merge main branch, bump version and push to release branch.
+
+inputs:
+  cmd:
+    description: Arguments to pass to the releaser Python package.
+    required: true
+outputs:
+  ready:
+    description: True if repository is ready for release.
+    value: ${{ steps.release.outputs.ready }}
+  tag:
+    description: Next release tag.
+    value: ${{ steps.release.outputs.tag }}
+  changelog:
+    description: Next release changelog.
+    value: ${{ steps.release.outputs.changelog }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Release
+      id: release
+      shell: bash
+      run: |
+        nix run ${{ github.action_path }} --impure -- ${{ inputs.cmd }}
