@@ -1,3 +1,10 @@
+## v0.1.2 (2024-09-27)
+
+### Refactor
+
+- [`a5c93dc`](https://github.com/kobo-labs/releaser/commit/a5c93dcb924e68df662dbc3f35bbe334585c71bd): fix `introspect` version
+
+
 ## v0.1.1 (2024-09-27)
 
 ### Fix
