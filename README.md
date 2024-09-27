@@ -53,6 +53,7 @@ on:
 
 jobs:
   release:
+    permissions: write-all
     uses: kobo-labs/releaser/.github/workflows/release.yml@<version>
     secrets: inherit
 ```
@@ -71,7 +72,8 @@ on:
       - main
 
 jobs:
-  release:
+  check:
+    permissions: write-all
     uses: kobo-labs/releaser/.github/workflows/check.yml@<version>
     secrets: inherit
 ```
