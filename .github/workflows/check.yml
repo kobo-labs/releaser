@@ -1,0 +1,35 @@
+---
+name: Commitizen Check
+on:
+  workflow_call:
+
+jobs:
+  check:
+    runs-on: arc-runner-set
+    steps:
+      - name: Install Nix dependencies
+        run: sudo apt-get update && sudo apt-get install -y curl xz-utils git
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v27
+
+      - name: Get workflow reference
+        id: introspection
+        uses: kobo-labs/introspect@main #TODO: Update version
+        with:
+          github_token: ${{ github.token }}
+          referenced_workflow: "kobo-labs/releaser/.github/workflows/check.yml"
+
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ github.token }}
+          fetch-depth: 0
+
+      - name: Check
+        uses: jenseng/dynamic-uses@v1
+        with:
+          uses: kobo-labs/releaser@${{ steps.introspection.outputs.referenced_workflow_sha }}
+          with: |
+            {
+              "cmd": "check ${{ github.workspace }}",
+            }
