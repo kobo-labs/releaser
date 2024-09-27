@@ -15,7 +15,7 @@ jobs:
 
       - name: Get workflow reference
         id: introspection
-        uses: kobo-labs/introspect@main #TODO: Update version
+        uses: kobo-labs/introspect@v0.1.0
         with:
           github_token: ${{ github.token }}
           referenced_workflow: "kobo-labs/releaser/.github/workflows/check.yml"

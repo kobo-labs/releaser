@@ -42,7 +42,7 @@ jobs:
 
       - name: Get workflow reference
         id: introspection
-        uses: kobo-labs/introspect@main
+        uses: kobo-labs/introspect@v0.1.0
         with:
           github_token: ${{ steps.app_token.outputs.token }}
           referenced_workflow: "kobo-labs/releaser/.github/workflows/release.yml"
