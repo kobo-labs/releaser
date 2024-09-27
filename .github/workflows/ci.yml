@@ -1,0 +1,53 @@
+---
+name: PR to main CI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  test_release:
+    uses: ./.github/workflows/test_release.yml
+    secrets: inherit
+
+  commitizen_check:
+    permissions: write-all
+    uses: ./.github/workflows/check.yml
+    secrets: inherit
+
+  check:
+    runs-on: arc-runner-set
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Nix dependencies
+        run: sudo apt-get update && sudo apt-get install -y curl xz-utils
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v27
+
+      - run: nix develop --command make check
+
+  test:
+    runs-on: arc-runner-set
+    steps:
+      - name: Install Nix dependencies
+        run: sudo apt-get update && sudo apt-get install -y curl git xz-utils
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v27
+
+      - uses: actions/checkout@v4
+
+      - run: |
+          git config --global user.name "$(git log -n 1 --pretty=format:%an)"
+          git config --global user.email "$(git log -n 1 --pretty=format:%ae)"
+
+      - run: nix develop --command make test

@@ -1,0 +1,10 @@
+* Update CHANGELOG for v0.1.1 (HEAD -> v0, tag: v0.1.1, origin/v0)
+*   Merge `main` into `v0`
+|\  
+| * fix: resolve a bug (origin/main)
+* | Update CHANGELOG for v0.1.0 (tag: v0.1.0)
+* | Merge `main` into `v0`
+|\| 
+| * feat(scope1): add a new feature
+|/  
+* first commit
