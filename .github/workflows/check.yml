@@ -5,13 +5,14 @@ on:
 
 jobs:
   check:
-    runs-on: arc-runner-set
+    runs-on: gha-runner-cx22
     steps:
       - name: Install Nix dependencies
         run: sudo apt-get update && sudo apt-get install -y curl xz-utils git
 
       - name: Install Nix
         uses: cachix/install-nix-action@v27
+      - uses: DeterminateSystems/magic-nix-cache-action@main
 
       - name: Get workflow reference
         id: introspection

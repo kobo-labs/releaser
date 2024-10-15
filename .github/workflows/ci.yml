@@ -21,7 +21,7 @@ jobs:
     secrets: inherit
 
   check:
-    runs-on: arc-runner-set
+    runs-on: gha-runner-cx22
     steps:
       - uses: actions/checkout@v4
         with:
@@ -32,17 +32,19 @@ jobs:
 
       - name: Install Nix
         uses: cachix/install-nix-action@v27
+      - uses: DeterminateSystems/magic-nix-cache-action@main
 
       - run: nix develop --command make check
 
   test:
-    runs-on: arc-runner-set
+    runs-on: gha-runner-cx22
     steps:
       - name: Install Nix dependencies
         run: sudo apt-get update && sudo apt-get install -y curl git xz-utils
 
       - name: Install Nix
         uses: cachix/install-nix-action@v27
+      - uses: DeterminateSystems/magic-nix-cache-action@main
 
       - uses: actions/checkout@v4
 
