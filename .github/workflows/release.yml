@@ -22,7 +22,7 @@ on:
 jobs:
   release:
     if: ${{ github.actor != 'release-workflow[bot]' }}
-    runs-on: arc-runner-set
+    runs-on: gha-runner-cx22
     outputs:
       ready: ${{ fromJSON(steps.release.outputs.outputs)['ready'] }}
       tag: ${{ fromJSON(steps.release.outputs.outputs)['tag'] }}
@@ -33,6 +33,7 @@ jobs:
 
       - name: Install Nix
         uses: cachix/install-nix-action@v27
+      - uses: DeterminateSystems/magic-nix-cache-action@main
 
       - uses: actions/create-github-app-token@v1
         id: app_token
