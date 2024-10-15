@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   prepare_test_branches:
-    runs-on: arc-runner-set
+    runs-on: gha-runner-cx22
     outputs:
       no_bump_branch: ${{ steps.create_test_branches.outputs.release-test-no-bump }}
       major_branch: ${{ steps.create_test_branches.outputs.release-test-major }}
@@ -59,16 +59,9 @@ jobs:
             git checkout -b ${BRANCH_NAME}
 
             # Perform commit
-            echo '{
-              "commitizen": {
-                "name": "cz_conventional_commits",
-                "tag_format": "v$version",
-                "version_scheme": "semver",
-                "version_provider": "scm",
-                "update_changelog_on_bump": true
-              }
-            }' > .cz.json
-            git add .cz.json
+            test_file="${BRANCH_NAME}.txt"
+            echo "TEST" > ${test_file}
+            git add ${test_file}
             git commit -m "${COMMIT_MESSAGE}"
 
             git push origin ${BRANCH_NAME}
@@ -86,7 +79,7 @@ jobs:
 
   # Assert conditions for the no bump release test
   assert_no_bump_release:
-    runs-on: arc-runner-set
+    runs-on: gha-runner-cx22
     needs: test_no_bump_release
     steps:
       - name: Assert no bump release conditions
@@ -117,7 +110,7 @@ jobs:
 
   # Assert conditions for the major release test
   assert_major_release:
-    runs-on: arc-runner-set
+    runs-on: gha-runner-cx22
     needs: test_major_release
     steps:
       - name: Assert major release conditions
@@ -139,7 +132,7 @@ jobs:
 
   # Cleanup test branches after all tests
   cleanup_test_branches:
-    runs-on: arc-runner-set
+    runs-on: gha-runner-cx22
     needs: [prepare_test_branches, assert_no_bump_release, assert_major_release]
     if: ${{ always() }}
     steps:
