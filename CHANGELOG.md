@@ -1,3 +1,10 @@
+## v0.2.0 (2024-10-15)
+
+### Feat
+
+- [`ea6ec44`](https://github.com/kobo-labs/releaser/commit/ea6ec44c0f8e2d2c5dd6415b49f352d2f171ddd2): switch to `gha-runner-cx22`
+
+
 ## v0.1.2 (2024-09-27)
 
 ### Refactor
