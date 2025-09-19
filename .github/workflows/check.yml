@@ -2,10 +2,15 @@
 name: Commitizen Check
 on:
   workflow_call:
+    inputs:
+      runner:
+        description: Which runner to run release workflow on.
+        type: string
+        default: ubuntu-latest
 
 jobs:
   check:
-    runs-on: gha-runner-cx22
+    runs-on: ${{ startsWith(inputs.runner, '[') && fromJSON(inputs.runner) || inputs.runner }}
     steps:
       - name: Install Nix dependencies
         run: sudo apt-get update && sudo apt-get install -y curl xz-utils git
