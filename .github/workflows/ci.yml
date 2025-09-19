@@ -21,7 +21,7 @@ jobs:
     secrets: inherit
 
   check:
-    runs-on: gha-runner-cx22
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
@@ -37,7 +37,7 @@ jobs:
       - run: nix develop --command make check
 
   test:
-    runs-on: gha-runner-cx22
+    runs-on: ubuntu-latest
     steps:
       - name: Install Nix dependencies
         run: sudo apt-get update && sudo apt-get install -y curl git xz-utils
