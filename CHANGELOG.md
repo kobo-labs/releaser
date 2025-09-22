@@ -1,3 +1,10 @@
+## v0.3.0 (2025-09-22)
+
+### Feat
+
+- [`a53e7b3`](https://github.com/kobo-labs/releaser/commit/a53e7b3a12de3704d354e922b20ed34b807ce8de) **workflows**: make runners configurable
+
+
 ## v0.2.0 (2024-10-15)
 
 ### Feat
