@@ -11,6 +11,10 @@ on:
         description: If set to true, the release won't be executed and no update is pushed to GitHub.
         type: boolean
         default: false
+      runs-on:
+        description: Which runner to run release workflow on.
+        type: string
+        default: ubuntu-latest
     outputs:
       ready:
         value: ${{ jobs.release.outputs.ready }}
@@ -22,7 +26,7 @@ on:
 jobs:
   release:
     if: ${{ github.actor != 'release-workflow[bot]' }}
-    runs-on: gha-runner-cx22
+    runs-on: ${{ startsWith(inputs.runs-on, '[') && fromJSON(inputs.runs-on) || inputs.runs-on }}
     outputs:
       ready: ${{ fromJSON(steps.release.outputs.outputs)['ready'] }}
       tag: ${{ fromJSON(steps.release.outputs.outputs)['tag'] }}

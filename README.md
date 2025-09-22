@@ -1,4 +1,4 @@
-# devops_action_release
+# releaser
 
 ## Overview
 

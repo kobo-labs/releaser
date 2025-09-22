@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   prepare_test_branches:
-    runs-on: gha-runner-cx22
+    runs-on: ubuntu-latest
     outputs:
       no_bump_branch: ${{ steps.create_test_branches.outputs.release-test-no-bump }}
       major_branch: ${{ steps.create_test_branches.outputs.release-test-major }}
@@ -79,7 +79,7 @@ jobs:
 
   # Assert conditions for the no bump release test
   assert_no_bump_release:
-    runs-on: gha-runner-cx22
+    runs-on: ubuntu-latest
     needs: test_no_bump_release
     steps:
       - name: Assert no bump release conditions
@@ -110,7 +110,7 @@ jobs:
 
   # Assert conditions for the major release test
   assert_major_release:
-    runs-on: gha-runner-cx22
+    runs-on: ubuntu-latest
     needs: test_major_release
     steps:
       - name: Assert major release conditions
@@ -132,7 +132,7 @@ jobs:
 
   # Cleanup test branches after all tests
   cleanup_test_branches:
-    runs-on: gha-runner-cx22
+    runs-on: ubuntu-latest
     needs: [prepare_test_branches, assert_no_bump_release, assert_major_release]
     if: ${{ always() }}
     steps:
