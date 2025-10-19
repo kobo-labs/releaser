@@ -15,6 +15,13 @@ on:
         description: Which runner to run release workflow on.
         type: string
         default: ubuntu-latest
+      release_app_id:
+        description: ID of the GitHub App used to authenticate release workflow
+        type: string
+        default: ""
+    secrets:
+      release_app_private_key:
+        required: true
     outputs:
       ready:
         value: ${{ jobs.release.outputs.ready }}
@@ -42,8 +49,8 @@ jobs:
       - uses: actions/create-github-app-token@v1
         id: app_token
         with:
-          app-id: ${{ vars.RELEASE_APP_ID }}
-          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          app-id: ${{ inputs.release_app_id != '' && inputs.release_app_id || vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.release_app_private_key != '' && secrets.release_app_private_key || secrets.RELEASE_APP_PRIVATE_KEY }}
 
       - name: Get workflow reference
         id: introspection
