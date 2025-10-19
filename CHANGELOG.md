@@ -1,3 +1,10 @@
+## v0.4.0 (2025-10-19)
+
+### Feat
+
+- [`a6e97f1`](https://github.com/kobo-labs/releaser/commit/a6e97f11a020ee8d842e971c122a8844a957563a): add explicit secrets arguments
+
+
 ## v0.3.0 (2025-09-22)
 
 ### Feat
